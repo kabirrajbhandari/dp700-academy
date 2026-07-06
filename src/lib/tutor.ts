@@ -1,11 +1,14 @@
 import type { Lesson, Module } from '../types'
 
 /**
- * Client for the local AI tutor proxy (tutor-server.cjs). Falls back to a
- * deterministic offline tutor built from lesson content when the proxy is
- * absent or has no API key — the app must stay fully usable offline.
+ * Client for the AI tutor proxy (tutor-server.cjs). The backend URL is taken
+ * from the build-time env var VITE_TUTOR_URL so a deployed app can point at a
+ * hosted backend (Render/Railway/Azure/etc.); it defaults to localhost for dev.
+ * Falls back to a deterministic offline tutor built from lesson content when
+ * the proxy is absent, unreachable, or has no API key — the app must stay
+ * fully usable offline on any static host.
  */
-const BASE = 'http://localhost:5189'
+const BASE = (import.meta.env.VITE_TUTOR_URL ?? 'http://localhost:5189').replace(/\/$/, '')
 
 export interface TutorMsg {
   role: 'user' | 'assistant'

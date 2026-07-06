@@ -33,6 +33,20 @@ npm run build      # type-check + production build
 - **Timed practice exam** — ~150-question bank covering every sub-skill in the exam blueprint, balanced across the three skill areas. Three formats (Quick 15 / Standard 30 / Full 60) plus single-domain drills, countdown scaled to length, flag-for-review, per-domain score report, attempt history.
 - **7 guided scenario labs** — Fabrikam's project end-to-end (lakehouse foundation, nightly incremental load, real-time monitoring, secure & ship, data warehouse + star schema, low-code mirroring + Dataflow Gen2, monitoring & optimization) with gated checkpoints — 41 steps.
 - **AI tutor** (optional) — per-lesson Claude tutor with explain-simpler / analogy / quiz-me actions. Run `node tutor-server.cjs` with `ANTHROPIC_API_KEY` set; without it the app falls back to an offline tutor built from lesson key points.
+
+## Deploying online
+
+The app is a **static SPA** — build it and drop the `dist/` folder on any static host.
+
+```bash
+npm run build          # outputs dist/ with host-agnostic relative paths
+```
+
+- **Netlify Drop** (no account): drag `dist/` onto https://app.netlify.com/drop
+- **GitHub Pages**: push to GitHub; `.github/workflows/deploy.yml` auto-builds and deploys (set Settings → Pages → Source = "GitHub Actions").
+- **Vercel / Cloudflare Pages / Netlify**: import the repo — configs (`vercel.json`, `netlify.toml`) are included.
+
+**Live AI tutor (optional):** the static app runs the tutor in offline mode by default. To enable the real Claude tutor on a deployed site, host `tutor-server.cjs` (Render/Railway/Azure Web App with `ANTHROPIC_API_KEY` set), then set `VITE_TUTOR_URL` to that backend’s URL and rebuild. See `.env.example`.
 - Calm sea-glass light / dark theme.
 
 ## Structure
