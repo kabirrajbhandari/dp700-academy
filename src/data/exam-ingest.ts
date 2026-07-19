@@ -444,4 +444,79 @@ export const BANK_INGEST: ExamQuestion[] = [
       'Session windows group bursts of activity separated by idle gaps, producing variable-length windows — ideal for user/robot sessions.',
     topic: 'Windowing functions',
   },
+  {
+    id: 'g-mr-6',
+    domain: 'ingest',
+    prompt:
+      'A mirrored Snowflake table full-reseeds every few minutes, spiking cost. A dbt job runs against the source on that cadence. What is the cause and fix?',
+    options: [
+      'Too many rows; add partitions',
+      'The dbt job’s DDL (drop/recreate) triggers reseeds — schedule schema changes into a maintenance window',
+      'V-Order is off; enable it',
+      'The watermark is stale; reset it',
+    ],
+    answer: 1,
+    explanation:
+      'Source DDL changes (drop/recreate, common in dbt) trigger a full mirroring reseed. Reduce reseeds by scheduling schema changes into maintenance windows rather than continuous runs.',
+    topic: 'Mirroring',
+  },
+  {
+    id: 'g-mr-7',
+    domain: 'ingest',
+    prompt:
+      'You mirrored an Azure SQL database but need to add a calculated column. The mirror is read-only. Best approach?',
+    options: [
+      'Write directly to the mirror',
+      'Create a lakehouse and a OneLake shortcut to the mirrored table, then compute the column there',
+      'Export to CSV and re-import',
+      'Switch to Import mode',
+    ],
+    answer: 1,
+    explanation:
+      'Mirrored data is read-only. Shortcut it into a lakehouse (no copy) and add computed columns / joins in the lakehouse layer.',
+    topic: 'Mirroring',
+  },
+  {
+    id: 'g-st-9',
+    domain: 'ingest',
+    prompt:
+      'For a production Spark Structured Streaming job that must survive infrastructure restarts and resume exactly-once, you should:',
+    options: [
+      'Run it in an interactive notebook and share one checkpoint across queries',
+      'Run it as a Spark Job Definition with a retry policy, and give each query its own durable checkpointLocation',
+      'Delete the checkpoint on every restart',
+      'Use the console sink',
+    ],
+    answer: 1,
+    explanation:
+      'Production streams run as Spark Job Definitions with retry policies; each query needs its own durable checkpoint on a lakehouse path to resume exactly-once. Sharing/deleting checkpoints corrupts recovery.',
+    topic: 'Spark structured streaming',
+  },
+  {
+    id: 'g-st-10',
+    domain: 'ingest',
+    prompt:
+      'A scheduled incremental job should process all input available now, then stop (reusing the checkpoint next run). Which trigger?',
+    options: ['Default (continuous)', 'Real-time mode', 'Available-now', 'Manual'],
+    answer: 2,
+    explanation:
+      'The available-now trigger processes all currently available input then stops; the next scheduled run reuses the same checkpoint to continue source progress — a batch-style incremental pattern.',
+    topic: 'Spark structured streaming',
+  },
+  {
+    id: 'g-sc-3',
+    domain: 'ingest',
+    prompt:
+      'When a lakehouse is promoted across deployment-pipeline stages, how are EXTERNAL shortcuts (e.g., to S3) handled versus INTERNAL OneLake shortcuts?',
+    options: [
+      'Both are deleted',
+      'Internal shortcuts auto-remap to the target stage; external shortcuts keep the same target unless remapped with a Variable Library',
+      'Both copy their data',
+      'External remap; internal break',
+    ],
+    answer: 1,
+    explanation:
+      'Deployment pipelines auto-remap internal OneLake shortcuts to the stage’s equivalent item; external shortcuts point at the same target across stages unless you remap them via a Variable Library.',
+    topic: 'Shortcuts',
+  },
 ]

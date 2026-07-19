@@ -182,6 +182,121 @@ WHEN NOT MATCHED THEN
         },
       ],
     },
+    {
+      id: 'ing-shortcuts',
+      title: 'Create & manage OneLake shortcuts',
+      minutes: 12,
+      summary:
+        'Reference data in place — internal OneLake, ADLS Gen2, S3, GCS, Dataverse — without copying, and know how shortcuts behave in CI/CD.',
+      keyPoints: [
+        'A shortcut virtualizes external/other-workspace data in place; there is no copy.',
+        'Supported targets: OneLake, ADLS Gen2, Amazon S3, Google Cloud Storage, Dataverse (and more).',
+        'Create shortcuts in the lakehouse Tables (Delta) or Files area.',
+        'In deployment pipelines, internal shortcuts auto-remap; external ones keep their target.',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            'A **shortcut** is a pointer that makes data stored elsewhere appear inside your lakehouse without moving or duplicating it. Every engine reads it as if it were local. Shortcuts are the #1 way to avoid copying data and a heavily tested concept.',
+        },
+        {
+          kind: 'diagram',
+          id: 'onelake',
+          caption: 'Shortcuts virtualize ADLS/S3/GCS/Dataverse and other OneLake locations in place — no copy.',
+        },
+        {
+          kind: 'steps',
+          title: 'Create a shortcut',
+          steps: [
+            {
+              title: 'Choose the location',
+              detail:
+                'In the lakehouse explorer, right-click Tables (for Delta tables) or Files (for raw files) → New shortcut.',
+              path: 'Lakehouse → Tables/Files → New shortcut',
+            },
+            {
+              title: 'Pick the source type',
+              detail:
+                'Select Internal (another OneLake item) or an external source: ADLS Gen2, Amazon S3, Google Cloud Storage, or Dataverse. Provide the connection/credentials.',
+            },
+            {
+              title: 'Point at the folder/table',
+              detail:
+                'Browse to the target path. The shortcut appears as a table or folder; queries read the live source data with no duplication.',
+            },
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'tip',
+          title: 'Shortcut vs. Mirroring vs. Copy',
+          body:
+            'Shortcut = virtualize existing files/tables in place (no movement). Mirroring = continuous replication of an operational database into OneLake as Delta. Copy = a one-time or scheduled physical move. Pick a shortcut when the data already lives in a lake and you just want to read it.',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Lifecycle detail: when promoting across deployment-pipeline stages, INTERNAL OneLake shortcuts are automatically remapped to the target stage; EXTERNAL shortcuts keep the same target unless you remap them with a Variable Library. Shortcut metadata is tracked in Git (shortcuts.metadata.json); the underlying data is not.',
+        },
+      ],
+    },
+    {
+      id: 'ing-mirroring',
+      title: 'Implement mirroring',
+      minutes: 14,
+      summary:
+        'Continuously replicate an operational database into OneLake as Delta with zero ETL — plus the limits and reseed triggers the exam tests.',
+      keyPoints: [
+        'Mirroring continuously replicates Azure SQL DB, Cosmos DB, Snowflake, or Fabric SQL DB into OneLake as Delta.',
+        'The mirrored data is read-only in Fabric and near-real-time.',
+        'Up to 1,000 tables; enabling mirroring needs the Admin or Member role.',
+        'DDL changes, stop/restart, or long capacity pauses trigger a full reseed.',
+        'To add computed columns, shortcut the mirror into a lakehouse and transform there.',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            '**Mirroring** creates a continuously updated, near-real-time replica of an operational database in OneLake, stored as Delta — with **no pipeline to build or maintain**. It is the answer whenever a scenario says "keep an operational database in sync in Fabric automatically."',
+        },
+        {
+          kind: 'table',
+          headers: ['Property', 'Detail'],
+          rows: [
+            ['Sources', 'Azure SQL DB, Azure Cosmos DB, Snowflake, Fabric SQL database (and growing)'],
+            ['Freshness', 'Continuous / near-real-time (no scheduling)'],
+            ['Direction', 'Read-only in Fabric — you cannot write back to the mirror'],
+            ['Table limit', 'Up to 1,000 tables ("Mirror all data" takes the first 1,000 by schema/table name)'],
+            ['Role to enable', 'Workspace Admin or Member'],
+            ['Storage cost', 'Mirrored data storage is free up to a limit tied to your capacity'],
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'warn',
+          title: 'Reseed triggers (a favourite exam trap)',
+          body:
+            'A full re-replication ("reseed") is triggered by source DDL changes (ALTER, drop/recreate — often from tools like dbt), stopping and restarting mirroring, or pausing the capacity for a long period. If a mirrored table keeps reseeding and spiking cost, schedule schema changes into a maintenance window.',
+        },
+        {
+          kind: 'callout',
+          tone: 'tip',
+          title: 'Adding logic on top of a mirror',
+          body:
+            'Because the mirror is read-only, you cannot add calculated columns directly. The pattern: create a lakehouse and a OneLake shortcut to the mirrored table, then compute derived columns / join with other data in the lakehouse.',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Distinguish sharply: "continuously replicate an operational DB, no ETL" → Mirroring. "Reference files already in a lake" → Shortcut. "One-time/scheduled bulk move" → Copy activity. Remember read-only, 1,000-table cap, Admin/Member to enable, and reseed-on-DDL.',
+        },
+      ],
+    },
   ],
   quiz: [
     {

@@ -120,6 +120,20 @@ export const GLOSSARY: Term[] = [
   { term: 'Data skew', category: 'Monitor', short: 'One Spark task handling far more data than peers, stalling a stage. Fix: salt the key, repartition, or broadcast.' },
   { term: 'Broadcast join', category: 'Monitor', short: 'Sending a small table to every executor to avoid shuffling the large table — the big/small join fix.' },
   { term: 'Idempotent load', category: 'Monitor', short: 'A load that produces the same result on re-run (via MERGE keyed on business key) — safe for retries and late data.' },
+
+  // --- Added depth ---
+  { term: 'Apache Airflow job', category: 'Core', short: 'Fabric’s managed Apache Airflow for code-first (Python DAG) orchestration inside Data Factory.', exam: 'Choose over pipelines when the team prefers code/DAGs. Needs paid capacity — not Free/PPU.' },
+  { term: 'DAG', category: 'Core', short: 'Directed Acyclic Graph — the Airflow structure defining tasks and their dependencies.' },
+  { term: 'Data access role', category: 'Security', short: 'A OneLake security role: Data + Permission (Read/ReadWrite) + Members + Constraints (RLS/CLS).', exam: 'RLS+CLS for a table must be in ONE role; roles UNION across, INTERSECT within.' },
+  { term: 'DefaultReader role', category: 'Security', short: 'A default OneLake role granting ReadAll on a lakehouse.', exam: 'Remove users from it when adding them to a restrictive role, or they keep full access.' },
+  { term: 'User identity mode', category: 'Security', short: 'SQL analytics endpoint mode where OneLake security roles govern access (no SQL GRANT on tables). Default for new items.' },
+  { term: 'Spark Job Definition (SJD)', category: 'Transform', short: 'A non-interactive, code-oriented Spark task — the production home for streaming and batch jobs (supports retry policy).', exam: 'Run production streams as SJDs with retries, not interactive notebooks.' },
+  { term: 'Checkpoint', category: 'Real-Time', short: 'Durable storage of stream offsets + state so a Structured Streaming query resumes exactly-once after restart.', exam: 'One durable checkpointLocation PER query on a lakehouse path — never share or casually delete.' },
+  { term: 'Available-now trigger', category: 'Real-Time', short: 'A Structured Streaming trigger that processes all currently available input then stops — for scheduled incremental runs.' },
+  { term: 'Direct Lake', category: 'Warehouse', short: 'A semantic-model storage mode that loads OneLake Delta into VertiPaq memory — Import speed, no data copy.', exam: 'Direct Lake on OneLake never falls back; Direct Lake on SQL can fall back to DirectQuery.' },
+  { term: 'Framing', category: 'Warehouse', short: 'A Direct Lake "refresh": a fast, metadata-only update pointing the model at the latest Delta Parquet files.' },
+  { term: 'DirectQuery fallback', category: 'Warehouse', short: 'When Direct Lake-on-SQL reverts to slower DirectQuery — caused by SQL-endpoint RLS/DDM/OLS, SQL views, unframed tables, or exceeding guardrails.', exam: 'DirectLakeBehavior: Automatic (prod), DirectLakeOnly (dev — errors instead), DirectQueryOnly.' },
+  { term: 'Reseed (mirroring)', category: 'Ingest', short: 'A full re-replication of a mirrored table, triggered by source DDL changes, stop/restart, or long capacity pauses.' },
 ]
 
 export const GLOSSARY_CATEGORIES: GlossaryCategory[] = [

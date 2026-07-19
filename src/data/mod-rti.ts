@@ -156,6 +156,120 @@ export const modRti: Module = {
         },
       ],
     },
+    {
+      id: 'rti-streaming',
+      title: 'Process streams with Spark Structured Streaming',
+      minutes: 16,
+      summary:
+        'The code-first streaming engine: readStream → transform → writeStream to Delta, with checkpoints, triggers, and production hardening.',
+      keyPoints: [
+        'Structured Streaming treats a live stream as an unbounded table (readStream/writeStream).',
+        'Every query needs its own durable checkpointLocation in the lakehouse — never share one.',
+        'Triggers: default/fixed-interval/Real-time (always-on) vs available-now (scheduled batch).',
+        'Run production streams as Spark Job Definitions with a retry policy, not notebooks.',
+        'Make sinks idempotent (Delta or foreachBatch MERGE) — Spark may re-run a microbatch.',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            '**Spark Structured Streaming** is the code-first choice when a stream needs complex logic — joins to lakehouse tables, custom stateful aggregation, or bespoke parsing — beyond what no-code Eventstream operators offer. It treats the live stream as an unbounded table that new rows are appended to.',
+        },
+        {
+          kind: 'code',
+          lang: 'python',
+          caption: 'readStream → transform → writeStream to a Delta table',
+          code: `df = (spark.readStream.format("...")  # e.g. Event Hubs / Kafka source
+        .load())
+
+parsed = df.selectExpr("CAST(body AS STRING) AS json")  # transform as needed
+
+query = (parsed.writeStream
+    .format("delta")
+    .outputMode("append")
+    .option("checkpointLocation", "Files/checkpoints/orders-bronze")  # durable, unique
+    .trigger(processingTime="1 minute")   # batch into fewer, larger commits
+    .toTable("bronze_orders"))
+
+query.awaitTermination()   # keep the job alive for this query`,
+        },
+        {
+          kind: 'callout',
+          tone: 'warn',
+          title: 'Checkpoints are not optional',
+          body:
+            'Set a durable checkpointLocation on a lakehouse path (never local driver storage) for every query, and use a SEPARATE checkpoint per query. The checkpoint stores source offsets + state so the query resumes exactly-once after a restart. Sharing a checkpoint corrupts recovery and causes duplicates or skipped records. Don’t delete a checkpoint to fix a transient failure.',
+        },
+        {
+          kind: 'table',
+          headers: ['Trigger', 'Behavior', 'Use for'],
+          rows: [
+            ['Default / fixed interval', 'Runs continuously, one microbatch after another', 'Always-on low-latency streams'],
+            ['Real-time mode', 'Continuous, lowest latency', 'Latency-critical always-on jobs'],
+            ['Available-now', 'Processes all currently available input, then stops', 'Scheduled incremental "batch" runs reusing the checkpoint'],
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'tip',
+          title: 'Production hardening',
+          body:
+            'Develop in a notebook, but run production streams as a Spark Job Definition with a retry policy (up to infinite retries) so infra failures auto-restart the job. Enable Optimize Write to avoid the small-file problem from frequent microbatch commits. Quarantine bad records (parse to null → route aside) so one bad row doesn’t stop the pipeline. Watch the Monitoring hub’s Structured Streaming tab (Input Rate, Process Rate, Batch Duration).',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Eventstream (no-code) vs Spark Structured Streaming (code, joins-to-lakehouse, custom state) vs KQL (query-time analytics over ingested events). "Continuously running" → default/real-time trigger + infinite retry; "scheduled catch-up" → available-now trigger. Idempotent sinks + per-query checkpoints are the reliability answers.',
+        },
+      ],
+    },
+    {
+      id: 'rti-native',
+      title: 'Native tables, shortcuts & query acceleration',
+      minutes: 12,
+      summary:
+        'In an Eventhouse, choose between native KQL tables and OneLake shortcuts — and when to turn on query acceleration.',
+      keyPoints: [
+        'Native KQL tables: data ingested & managed by the engine — fastest ingest and query.',
+        'OneLake shortcuts in RTI: query OneLake Delta in place, no copy — but slower by default.',
+        'Query acceleration caches/indexes shortcut data for near-native KQL speed.',
+        'Choose native for hot, high-query streaming; shortcut when data already lives in OneLake.',
+      ],
+      blocks: [
+        {
+          kind: 'compare',
+          title: 'Native table vs. OneLake shortcut in an Eventhouse',
+          items: [
+            {
+              name: 'Native KQL table',
+              use: 'Hot, high-volume streaming data that must be ingested and queried at top speed; the KQL engine owns storage, indexing, and caching.',
+              avoid: 'The data already lives in OneLake and copying it would be wasteful.',
+            },
+            {
+              name: 'OneLake shortcut',
+              use: 'Data already in OneLake (lakehouse/warehouse Delta) that you want to query with KQL without duplicating it.',
+              avoid: 'You need the fastest possible query latency on cold shortcut data — unless you enable query acceleration.',
+            },
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'info',
+          title: 'Query acceleration for OneLake shortcuts',
+          body:
+            'By default, querying a OneLake shortcut from an Eventhouse is slower than a native table because the data isn’t indexed by the KQL engine. Query acceleration caches and indexes the shortcut’s data inside the Eventhouse, giving near-native KQL performance — without copying the source. Enable it when shortcut queries are too slow but you don’t want to duplicate data.',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Three-way choice: native table (fastest, engine-managed, for hot streaming) vs standard shortcut (no copy, slower) vs query-accelerated shortcut (no copy, near-native speed). Pick query acceleration when the requirement is "fast KQL over existing OneLake data without duplicating it."',
+        },
+      ],
+    },
   ],
   quiz: [
     {

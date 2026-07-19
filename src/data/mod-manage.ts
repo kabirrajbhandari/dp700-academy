@@ -152,6 +152,134 @@ export const modManage: Module = {
         },
       ],
     },
+    {
+      id: 'mg-airflow',
+      title: 'Apache Airflow jobs — code-first orchestration',
+      minutes: 13,
+      summary:
+        'When you prefer Python DAGs over the no-code pipeline canvas: Fabric’s managed Apache Airflow, how it authenticates to Fabric, and when to choose it.',
+      keyPoints: [
+        'Apache Airflow job = managed, code-first (Python DAG) orchestration inside Data Factory.',
+        'Choose Airflow when the team prefers code/DAGs; choose pipelines for no-code.',
+        'Needs a workspace on a paid capacity — Free and PPU workspaces are NOT supported.',
+        'DAGs authenticate to Fabric via a service principal or workspace identity.',
+        'Deferrable operators free worker slots while waiting; autoscale handles spikes.',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            'An **Apache Airflow job** is Fabric’s managed Apache Airflow — the next generation of Azure Data Factory’s Workflow Orchestration Manager. You author **DAGs (Directed Acyclic Graphs)** in Python to schedule and monitor complex workflows at scale, without managing the Airflow infrastructure yourself.',
+        },
+        {
+          kind: 'compare',
+          title: 'Airflow job vs. data pipeline',
+          items: [
+            {
+              name: 'Apache Airflow job',
+              use: 'You prefer writing code / Python DAGs; complex dependency graphs; teams already invested in Airflow operators and providers.',
+              avoid: 'You want a no-code experience, or the workspace is on Free/PPU (unsupported).',
+            },
+            {
+              name: 'Data pipeline',
+              use: 'No-code/low-code orchestration on a visual canvas; most Fabric ETL; least effort.',
+              avoid: 'You specifically need Python-defined DAGs or existing Airflow tooling.',
+            },
+          ],
+        },
+        {
+          kind: 'steps',
+          title: 'Create and run an Airflow job',
+          steps: [
+            {
+              title: 'Create the item',
+              detail:
+                'In a workspace on a paid capacity, choose New item → Data Factory → Apache Airflow Job. Name the project.',
+              path: '+ New item → Data Factory → Apache Airflow Job',
+            },
+            {
+              title: 'Add a DAG file',
+              detail:
+                'In the dags folder, create a .py file. Fabric gives you boilerplate DAG code with operators (e.g. BashOperator). Edit and Save.',
+            },
+            {
+              title: 'Authenticate to Fabric',
+              detail:
+                'To run Fabric items from a DAG, add a Fabric connection using a service principal (with "Service principals can call Fabric public APIs" enabled by the tenant admin) or a workspace identity.',
+            },
+            {
+              title: 'Trigger Fabric items',
+              detail:
+                'Use the Fabric provider operator: set job_type to RunNotebook, sparkjob, or Pipeline; wait_for_termination=True polls until done; deferrable=True frees the worker while waiting.',
+            },
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Key facts: Airflow jobs need an assigned (paid) capacity — Free/PPU workspaces are not supported. Choose Airflow for code/DAG lovers, pipelines for no-code. Deferrable operators suspend idle operators to free workers. Auth is via service principal or workspace identity.',
+        },
+      ],
+    },
+    {
+      id: 'mg-onelake-security',
+      title: 'OneLake security — data-access roles in depth',
+      minutes: 16,
+      summary:
+        'The data-plane security model: roles with Data + Permission + Members + Constraints, identity modes, and how RLS/CLS combine across roles.',
+      keyPoints: [
+        'OneLake security is the data-plane model, enforced across ALL Fabric engines.',
+        'A role has four parts: Data, Permission (Read/ReadWrite), Members, Constraints (RLS/CLS).',
+        'Admin/Member/Contributor bypass OneLake security; only Viewer/Read users are filtered.',
+        'Delete users from DefaultReader or they keep full access.',
+        'Within a role rules INTERSECT; across roles they UNION (least-restrictive).',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            '**OneLake security** is the **data-plane** security model — define role-based access to folders and tables once, and it is enforced consistently across every compute engine in Fabric (lakehouse, Spark notebooks, the SQL analytics endpoint in user-identity mode, and Direct Lake on OneLake). Workspace roles are the coarse control; OneLake security is the fine-grained data control.',
+        },
+        {
+          kind: 'table',
+          headers: ['Role component', 'What it defines'],
+          rows: [
+            ['Data', 'The tables/folders the role grants access to (All data or Selected data)'],
+            ['Permission', 'Read, or ReadWrite (edit data without item-management rights) where supported'],
+            ['Members', 'The users/groups in the role'],
+            ['Constraints', 'Row-level (RLS) and column-level (CLS) restrictions applied per table'],
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'warn',
+          title: 'Privileged roles bypass — and the DefaultReader trap',
+          body:
+            'Workspace Admin, Member, and Contributor roles are NOT restricted by OneLake security — filtering applies only to Viewer users and those granted via Read/OneLake roles. Also: every lakehouse has a DefaultReader role granting ReadAll. When you add a user to a restrictive data-access role, you MUST remove them from DefaultReader or they keep full access.',
+        },
+        {
+          kind: 'text',
+          body:
+            'For a lakehouse **SQL analytics endpoint**, new items default to **User’s identity mode**, where OneLake security roles govern access (SQL GRANT/REVOKE on tables is not used). Admins/Members can switch to delegated mode, where SQL GRANT/REVOKE and dynamic data masking apply instead. **DDM is not part of OneLake security** — it lives in the delegated/warehouse model.',
+        },
+        {
+          kind: 'callout',
+          tone: 'info',
+          title: 'How multiple roles combine',
+          body:
+            'Within one role, object + row + column rules INTERSECT (you see the narrowest slice). Across multiple roles a user belongs to, access UNIONs (least-restrictive) — RLS predicates OR together (e.g. city=\'Redmond\' OR city=\'New York\'), CLS column sets union. Critically, you cannot split RLS into one role and CLS into another — RLS and CLS for a table must live in a SINGLE role, or queries error.',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Expect scenarios testing: "user sees no data" (not in any role / removed from DefaultReader not done), "RLS+CLS across two roles fails" (must be one role), and which engines enforce it (lakehouse, Spark, SQL endpoint user-identity mode, Direct Lake on OneLake). Remember privileged workspace roles bypass it entirely.',
+        },
+      ],
+    },
   ],
   quiz: [
     {

@@ -314,4 +314,63 @@ export const BANK_MONITOR: ExamQuestion[] = [
       'Throttling is a capacity signal, not a transient bug. Scale the capacity, shift heavy work off-peak, or optimize workloads. Blindly retrying wastes CUs and worsens contention.',
     topic: 'Capacity optimization',
   },
+  {
+    id: 'm-dl-1',
+    domain: 'monitor',
+    prompt:
+      'A Direct Lake report tab is unexpectedly slow. TABLETRAITS() shows a table falling back to DirectQuery because RLS is defined at the SQL analytics endpoint. Best fix to restore Direct Lake speed?',
+    options: [
+      'Add more capacity only',
+      'Move the row-level security into the semantic model (or use Direct Lake on OneLake)',
+      'Delete the report',
+      'Convert to Import mode',
+    ],
+    answer: 1,
+    explanation:
+      'SQL-endpoint RLS (also DDM/OLS, SQL views, unframed tables, or exceeding guardrails) forces DirectQuery fallback for Direct Lake on SQL. Moving RLS to the model — or using Direct Lake on OneLake, which never falls back — restores Direct Lake performance.',
+    topic: 'Direct Lake fallback',
+  },
+  {
+    id: 'm-dl-2',
+    domain: 'monitor',
+    prompt:
+      'A Direct Lake semantic model’s refresh "succeeds" in seconds but reports show yesterday’s data after a big load. Why?',
+    options: [
+      'The capacity is throttled',
+      'A Direct Lake refresh is framing (metadata-only) — the model was not re-framed after the new Delta files landed, or queries reflect the last framing point',
+      'Import mode is disabled',
+      'The lakehouse is read-only',
+    ],
+    answer: 1,
+    explanation:
+      'A Direct Lake "refresh" is framing — a metadata-only pointer update. Until framing runs after new Delta files land, queries return data as of the last successful framing. Schedule/trigger framing after loads.',
+    topic: 'Direct Lake framing',
+  },
+  {
+    id: 'm-dl-3',
+    domain: 'monitor',
+    prompt:
+      'During development you want Direct Lake queries to ERROR (not silently fall back) so you can catch fallback causes. Which DirectLakeBehavior setting?',
+    options: ['Automatic', 'DirectLakeOnly', 'DirectQueryOnly', 'Import'],
+    answer: 1,
+    explanation:
+      'DirectLakeOnly makes queries fail instead of falling back, surfacing issues during development. Automatic (default) silently falls back for production continuity; DirectQueryOnly forces DirectQuery to measure its cost.',
+    topic: 'Direct Lake fallback',
+  },
+  {
+    id: 'm-opt-11',
+    domain: 'monitor',
+    prompt:
+      'KQL queries against a OneLake shortcut in an Eventhouse are much slower than native tables, but you must not copy the data. What do you enable?',
+    options: [
+      'V-Order',
+      'Query acceleration for OneLake shortcuts',
+      'A retry policy',
+      'DirectQuery',
+    ],
+    answer: 1,
+    explanation:
+      'Query acceleration caches and indexes the shortcut’s data inside the Eventhouse for near-native KQL performance, with no duplication of the source data.',
+    topic: 'Eventhouse optimization',
+  },
 ]

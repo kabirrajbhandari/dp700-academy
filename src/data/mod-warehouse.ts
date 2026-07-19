@@ -189,6 +189,57 @@ ALTER TABLE dbo.dim_customer
         },
       ],
     },
+    {
+      id: 'wh-directlake',
+      title: 'Serve data with Direct Lake semantic models',
+      minutes: 15,
+      summary:
+        'How Power BI reads OneLake Delta at import speed without importing — framing, DirectQuery fallback, and the settings the exam tests.',
+      keyPoints: [
+        'Direct Lake loads Delta straight into memory (VertiPaq) — import-like speed, no data copy.',
+        'A Direct Lake "refresh" = framing: a fast, metadata-only update to the latest Delta files.',
+        'Direct Lake on SQL can fall back to DirectQuery (slower); Direct Lake on OneLake cannot.',
+        'RLS/DDM/OLS at the SQL endpoint, SQL views, or exceeding guardrails cause fallback.',
+        'DirectLakeBehavior: Automatic (prod), DirectLakeOnly (dev), DirectQueryOnly (measure).',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            '**Direct Lake** is a Power BI semantic-model storage mode that loads Delta tables from OneLake directly into memory and queries them with the VertiPaq engine — giving **Import-mode speed without an Import-mode refresh**. There is no cached copy: a "refresh" only updates metadata. It is the recommended serving mode over large lakehouses and warehouses.',
+        },
+        {
+          kind: 'table',
+          headers: ['Mode', 'How data is served', 'Refresh'],
+          rows: [
+            ['Import', 'Full cached copy in VertiPaq', 'Copies all data (slow, resource-heavy)'],
+            ['DirectQuery', 'Federated queries to the source', 'No copy, but slower queries'],
+            ['Direct Lake', 'Delta loaded into VertiPaq on demand', 'Framing — metadata-only, seconds'],
+          ],
+        },
+        {
+          kind: 'callout',
+          tone: 'info',
+          title: 'Framing',
+          body:
+            'Framing is the Direct Lake operation a refresh triggers: the model analyzes the latest Delta log and points at the newest Parquet files — usually a few seconds. Until you frame after modifying the Delta tables, queries return data as of the last framing point, not the latest state. Schedule/refresh to frame.',
+        },
+        {
+          kind: 'callout',
+          tone: 'warn',
+          title: 'DirectQuery fallback (Direct Lake on SQL)',
+          body:
+            'Direct Lake on the SQL analytics endpoint silently falls back to (slower) DirectQuery when a referenced table has SQL-endpoint RLS, DDM, or OLS; is based on an unmaterialized SQL view; hasn’t been framed; or exceeds capacity guardrails (too many Parquet files/row groups/rows). Fixes: move security to the model, materialize views, OPTIMIZE/VACUUM the Delta table, or scale the SKU. Direct Lake on OneLake runs DirectLakeOnly and never falls back — it’s the recommended option for new models.',
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Know: framing = metadata-only refresh; fallback causes (RLS/DDM/OLS at SQL endpoint, SQL views, unframed, guardrails). DirectLakeBehavior — Automatic (prod, silent fallback), DirectLakeOnly (dev, errors instead of fallback so you catch issues), DirectQueryOnly (measure fallback cost). "Refresh failed until Delta optimized" points at guardrails → OPTIMIZE/VACUUM.',
+        },
+      ],
+    },
   ],
   quiz: [
     {

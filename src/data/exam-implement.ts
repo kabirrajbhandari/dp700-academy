@@ -516,4 +516,68 @@ export const BANK_IMPLEMENT: ExamQuestion[] = [
       'Notebooks (Spark) suit complex, large-scale, or highly custom transforms and code-based patterns like MERGE. Dataflow Gen2 suits low-code/citizen-developer transforms.',
     topic: 'Choosing orchestration tools',
   },
+  {
+    id: 'i-air-3',
+    domain: 'implement',
+    prompt:
+      'A team wants to orchestrate Fabric notebooks and pipelines using Python DAGs they already maintain, rather than the visual pipeline canvas. Which item, and what capacity requirement?',
+    options: [
+      'Data pipeline; works on any workspace',
+      'Apache Airflow job; requires a workspace on a paid capacity (not Free/PPU)',
+      'Dataflow Gen2; requires Premium',
+      'Notebook; requires a trial only',
+    ],
+    answer: 1,
+    explanation:
+      'Apache Airflow jobs provide code-first (Python DAG) orchestration and require a workspace assigned to a paid Fabric capacity — Free and PPU workspaces are not supported.',
+    topic: 'Apache Airflow settings',
+  },
+  {
+    id: 'i-sec-11',
+    domain: 'implement',
+    prompt:
+      'You add an analyst to a restrictive OneLake data-access role, but they can still see all rows. What did you most likely forget?',
+    options: [
+      'To grant them Admin',
+      'To remove them from the DefaultReader role (which grants ReadAll)',
+      'To enable DirectQuery',
+      'To create a shortcut',
+    ],
+    answer: 1,
+    explanation:
+      'Every lakehouse has a DefaultReader role granting ReadAll. A user left in DefaultReader keeps full access regardless of other roles — remove them from it when applying a restrictive role.',
+    topic: 'OneLake security',
+  },
+  {
+    id: 'i-sec-12',
+    domain: 'implement',
+    prompt:
+      'Which users are NOT filtered by OneLake security RLS/CLS on a lakehouse table?',
+    options: [
+      'Everyone is filtered equally',
+      'Workspace Admin, Member, and Contributor (they bypass it); only Viewer/Read users are filtered',
+      'Only external users',
+      'Only the item owner',
+    ],
+    answer: 1,
+    explanation:
+      'Workspace Admin, Member, and Contributor roles bypass OneLake security and can read all data. RLS/CLS filtering applies to Viewer users and those granted via OneLake Read roles.',
+    topic: 'OneLake security',
+  },
+  {
+    id: 'i-orch-7',
+    domain: 'implement',
+    prompt:
+      'You must load 38 source tables with one maintainable pipeline driven by a table listing sources, targets, and watermarks. Which construct iterates the rows?',
+    options: [
+      'A single Copy activity',
+      'Lookup (read control table) feeding a ForEach that runs parameterized activities per @item()',
+      'A Dataflow Gen2',
+      'Nested If Conditions',
+    ],
+    answer: 1,
+    explanation:
+      'The metadata-driven pattern: Lookup reads the control table, ForEach iterates its rows, and inner activities reference @item().SourceTable etc. — one pipeline serves all 38 tables.',
+    topic: 'Metadata-driven orchestration',
+  },
 ]

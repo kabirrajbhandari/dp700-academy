@@ -76,4 +76,22 @@ export const SCENARIOS: Record<string, string> = {
     'One bad week at Fabrikam: the ERP password rotates and Copy fails (auth), a supplier renames a column and the Dataflow breaks (schema), and a notebook OOMs on Black Friday volume (skew). The triage table in this lesson is the playbook their on-call now follows — read the error where it surfaced, fix the root cause, re-run idempotently.',
   'mo-optimize':
     'Six months in, Fabrikam’s hourly micro-batches have left orders_silver with 40,000 tiny files and dashboards take 30 seconds. A scheduled weekly OPTIMIZE (plus VACUUM to reclaim 2 TB of old versions) brings reads back under 3 seconds — and broadcasting the 200-row store dimension fixes the one Spark join that kept spilling.',
+
+  // ---- Added depth lessons ----
+  'mg-airflow':
+    'Fabrikam’s ML team already writes Airflow DAGs for their on-prem jobs and refuses to rebuild everything in the no-code canvas. This lesson is the compromise: a Fabric Apache Airflow job runs their Python DAGs, triggering Fabric notebooks and pipelines via a service principal — code-first orchestration living right next to the low-code pipelines the rest of the team uses.',
+  'mg-onelake-security':
+    'Fabrikam’s auditor asks: "prove a Portland analyst physically cannot read Seattle rows or the salary column — from Spark, SQL, AND Power BI." Workspace roles can’t do that. This lesson is where the team defines OneLake security data-access roles once (RLS + CLS in one role) and watches every engine enforce it — after remembering to remove those analysts from DefaultReader.',
+  'ing-shortcuts':
+    'Fabrikam’s clickstream sits in ADLS Gen2 and a partner drops files in S3. Copying both nightly cost $400/month in egress and a brittle pipeline. This lesson replaces all of it with OneLake shortcuts — the data is read in place, zero copy — and explains why the internal shortcuts auto-remap when the team promotes Dev → Prod.',
+  'ing-mirroring':
+    'Fabrikam’s order system is a busy Azure SQL Database, and analysts kept asking for "fresher than nightly" data. This lesson is the fix: mirror the database into OneLake as Delta, continuously and with no pipeline — then shortcut it into the lakehouse to add computed columns. They also learn why a dbt job that drops/recreates tables kept triggering costly reseeds.',
+  'rti-streaming':
+    'Fabrikam’s dock telemetry needs a running 5-minute defect rate joined to the lakehouse product dimension — too complex for no-code Eventstream operators. This lesson is where an engineer writes a Spark Structured Streaming job: readStream → join → writeStream to Delta with a dedicated checkpoint, shipped as a Spark Job Definition with infinite retry so it survives nightly infra patching.',
+  'rti-native':
+    'Fabrikam’s Eventhouse holds hot robot telemetry as native KQL tables (fast), but the maintenance team also wants to query two years of cold history already sitting in the lakehouse. This lesson is the decision: shortcut the cold OneLake data instead of copying it, and flip on query acceleration when those historical KQL queries feel sluggish.',
+  'wh-directlake':
+    'Fabrikam’s CFO dashboard over 180M sales rows was on Import mode — a 40-minute nightly refresh that sometimes failed. This lesson switches it to a Direct Lake semantic model: framing takes seconds, no data copy. The team also learns why one report tab kept falling back to slow DirectQuery (RLS defined at the SQL endpoint) and how to fix it.',
+  'or-metadata':
+    'Fabrikam’s nightly load had ballooned into 38 near-identical copy pipelines — a maintenance nightmare. This lesson collapses them into ONE metadata-driven pipeline: a control table lists every source/target/watermark, a Lookup reads it, and a ForEach loops with @item() parameters. Adding a 39th table is now one row, not a new pipeline.',
 }

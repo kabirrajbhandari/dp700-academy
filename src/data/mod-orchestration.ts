@@ -94,6 +94,69 @@ Filter (query):  WHERE ModifiedDate > '@{pipeline().parameters.watermark}'`,
         },
       ],
     },
+    {
+      id: 'or-metadata',
+      title: 'Metadata-driven pipelines & dynamic expressions',
+      minutes: 14,
+      summary:
+        'Build one pipeline that loads dozens of tables from a control table, using Lookup, ForEach, parameters, variables, and the expression language.',
+      keyPoints: [
+        'A control table + Lookup + ForEach = one reusable pipeline for many tables.',
+        'Parameters are set at run start (read-only); variables change mid-run via Set variable.',
+        'Reference values with @pipeline().parameters.x, @variables(\'y\'), @activity(\'A\').output.',
+        'ForEach can run sequentially or in parallel (batch count); nest activities inside it.',
+      ],
+      blocks: [
+        {
+          kind: 'text',
+          body:
+            'A **metadata-driven** pipeline replaces dozens of near-identical copy pipelines with one generic pipeline that reads a **control table** and loops. It is the scalable, maintainable ETL pattern — and a frequent exam scenario ("load 40 tables without building 40 pipelines").',
+        },
+        {
+          kind: 'diagram',
+          id: 'orchestration',
+          caption: 'Lookup reads the control table → ForEach iterates → parameterized Copy/Notebook per row.',
+        },
+        {
+          kind: 'steps',
+          title: 'Build the pattern',
+          steps: [
+            {
+              title: 'Lookup the control table',
+              detail:
+                'A Lookup activity reads all rows of a control table (source table names, target names, watermark columns) into the pipeline.',
+            },
+            {
+              title: 'ForEach over the rows',
+              detail:
+                'Feed @activity(\'Lookup\').output.value into a ForEach. Choose sequential (ordered, stop-on-fail) or parallel with a batch count for throughput.',
+            },
+            {
+              title: 'Parameterize the inner activities',
+              detail:
+                'Inside ForEach, the Copy/Notebook activities use @item().SourceTable, @item().TargetTable, etc., so one definition serves every row.',
+            },
+          ],
+        },
+        {
+          kind: 'code',
+          lang: 'text',
+          caption: 'Dynamic content examples',
+          code: `Source query:  SELECT * FROM @{item().SourceTable}
+               WHERE ModifiedDate > '@{item().LastWatermark}'
+Sink table:    @{item().TargetTable}
+Load date:     @{formatDateTime(pipeline().parameters.loadDate,'yyyy-MM-dd')}
+Loop rows:     @activity('LookupControl').output.value`,
+        },
+        {
+          kind: 'callout',
+          tone: 'exam',
+          title: 'Exam angle',
+          body:
+            'Parameters vs variables: parameters are passed at invocation and read-only during the run; variables are mutable mid-run with Set variable. The metadata-driven pattern (Lookup + ForEach + @item()) is the standard answer to "one pipeline, many tables." Use ForEach sequential mode when order matters or a failure must stop the batch.',
+        },
+      ],
+    },
   ],
   quiz: [
     {
